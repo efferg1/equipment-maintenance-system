@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('看板 - 设备点检与故障工单系统')}"></head>
+<body>
+<div th:replace="~{fragments :: nav}"></div>
+
+<div class="wrap">
+    <div class="card">
+        <h1>设备运行看板</h1>
+        <div class="sub">
+            每日开工先看这块：今天该点检哪些、有几张工单没关、设备停了几台。
+        </div>
+        <div class="grid">
+            <div class="box">
+                <div class="n" th:text="${eqTotal}">0</div>
+                <div class="l">在册设备</div>
+            </div>
+            <div class="box orange">
+                <div class="n" th:text="${dueToday}">0</div>
+                <div class="l">今日到期点检</div>
+            </div>
+            <div class="box red">
+                <div class="n" th:text="${overdue}">0</div>
+                <div class="l">已逾期未点检</div>
+            </div>
+            <div class="box red">
+                <div class="n" th:text="${openFaults}">0</div>
+                <div class="l">未关闭工单</div>
+            </div>
+            <div class="box green">
+                <div class="n" th:text="${monthFault}">0</div>
+                <div class="l">本月故障数</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>设备状态分布</h2>
+        <table>
+            <tr><th style="width:20%">状态</th><th style="width:14%">台数</th><th>说明</th></tr>
+            <tr th:each="s : ${statusDist}">
+                <td>
+                    <span class="tag run" th:if="${s.status == 'RUNNING'}">运行中</span>
+                    <span class="tag rep" th:if="${s.status == 'REPAIRING'}">维修中</span>
+                    <span class="tag down" th:if="${s.status == 'DOWN'}">停机</span>
+                    <span class="tag scrap" th:if="${s.status == 'SCRAPPED'}">报废</span>
+                </td>
+                <td th:text="${s.cnt}"></td>
+                <td class="sub" style="margin:0">
+                    <span th:if="${s.status == 'RUNNING'}">正常生产，按计划点检</span>
+                    <span th:if="${s.status == 'REPAIRING'}">有工单未完成，维修中</span>
+                    <span th:if="${s.status == 'DOWN'}">非计划停机，需确认是否待修</span>
+                    <span th:if="${s.status == 'SCRAPPED'}">已报废，不再纳入点检</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>今日待点检 / 逾期未检</h2>
+        <div class="sub">逾期天数越多越该先处理，连续逾期说明这套 PM 计划本身或人手排不开</div>
+        <table>
+            <tr>
+                <th>设备编号</th><th>设备名称</th><th>检查项</th><th>判定标准</th>
+                <th>周期</th><th>下次到期</th><th>责任人</th><th>状态</th>
+            </tr>
+            <tr th:each="p : ${duePlans}">
+                <td th:text="${p.eqCode}"></td>
+                <td th:text="${p.eqName}"></td>
+                <td th:text="${p.itemName}"></td>
+                <td class="sub" style="margin:0" th:text="${p.standard}"></td>
+                <td th:text="${p.cycleDays} + ' 天'"></td>
+                <td th:text="${p.nextDueDate}"></td>
+                <td th:text="${p.owner}"></td>
+                <td>
+                    <span class="tag wait" th:if="${p.overdueDays == 0}">今日到期</span>
+                    <span class="tag down" th:if="${p.overdueDays > 0}"
+                          th:text="${'逾期 ' + p.overdueDays + ' 天'}"></span>
+                </td>
+            </tr>
+        </table>
+        <div class="empty" th:if="${#lists.isEmpty(duePlans)}">今天没有到期或逾期的点检项</div>
+    </div>
+
+    <div class="card">
+        <h2>最近点检记录</h2>
+        <table>
+            <tr><th>时间</th><th>设备</th><th>检查项</th><th>实测值</th><th>结果</th><th>点检人</th><th>备注</th></tr>
+            <tr th:each="r : ${recentChecks}">
+                <td th:text="${#dates.format(r.checkTime, 'MM-dd HH:mm')}"></td>
+                <td th:text="${r.eqCode}"></td>
+                <td th:text="${r.itemName}"></td>
+                <td th:text="${r.measureValue}"></td>
+                <td>
+                    <span class="tag ok" th:if="${r.result == 'OK'}">合格</span>
+                    <span class="tag ng" th:if="${r.result == 'NG'}">不合格</span>
+                </td>
+                <td th:text="${r.checker}"></td>
+                <td class="sub" style="margin:0" th:text="${r.remark}"></td>
+            </tr>
+        </table>
+        <div class="empty" th:if="${#lists.isEmpty(recentChecks)}">暂无点检记录</div>
+    </div>
+</div>
+</body>
+</html>

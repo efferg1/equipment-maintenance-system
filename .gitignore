@@ -1,0 +1,32 @@
+# 构建产物
+target/
+build/
+out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.ipr
+*.iws
+.settings/
+.classpath
+.project
+
+# 日志与运行时
+run.log
+logs/
+*.log
+
+# 测试与预览临时文件
+_import_test.xlsx
+_pv_*.html
+_shot_*.png
+create_repo.py
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 本地配置
+application-local.yaml

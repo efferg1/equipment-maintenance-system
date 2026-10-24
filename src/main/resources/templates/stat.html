@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('统计分析 - 设备点检与故障工单系统')}"></head>
+<body>
+<div th:replace="~{fragments :: nav}"></div>
+
+<div class="wrap">
+    <div class="card">
+        <h2>设备维护指标</h2>
+        <div class="sub">
+            MTTR 是平均修复时长（从报修到维修完成），设备管理里最常被问的一个数；
+            故障次数越集中，说明那台设备该做专项改善而不是继续换件。
+        </div>
+        <div class="grid">
+            <div class="box green">
+                <div class="n">
+                    <span th:text="${mttr != null ? mttr : '—'}">0</span>
+                    <span style="font-size:13px;font-weight:400"> 分钟</span>
+                </div>
+                <div class="l">MTTR 平均修复时长</div>
+            </div>
+            <div class="box" th:each="s : ${byStatus}">
+                <div class="n" th:text="${s.cnt}">0</div>
+                <div class="l">
+                    <span th:if="${s.status == 'WAITING'}">待派单工单</span>
+                    <span th:if="${s.status == 'REPAIRING'}">维修中工单</span>
+                    <span th:if="${s.status == 'VERIFYING'}">待验收工单</span>
+                    <span th:if="${s.status == 'CLOSED'}">已关闭工单</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>各设备故障次数与平均修复时长</h2>
+        <div class="sub">LEFT JOIN 保证没出过故障的设备也列出来，次数为 0</div>
+        <table>
+            <tr>
+                <th>设备编号</th><th>设备名称</th><th>故障次数</th>
+                <th>其中高级故障</th><th>平均修复时长（分钟）</th>
+            </tr>
+            <tr th:each="r : ${byEquipment}">
+                <td><b th:text="${r.eqCode}"></b></td>
+                <td th:text="${r.eqName}"></td>
+                <td th:text="${r.faultCount}"></td>
+                <td>
+                    <span th:text="${r.highCount}"></span>
+                    <span class="tag down" th:if="${r.highCount > 0}">有停线</span>
+                </td>
+                <td>
+                    <span th:if="${r.avgRepairMin != null}" th:text="${r.avgRepairMin}"></span>
+                    <span th:if="${r.avgRepairMin == null}" class="sub" style="margin:0">无已完成工单</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>点检合格率（按检查项）</h2>
+        <div class="sub">合格率低的检查项，往往就是这套 PM 计划最该改的地方</div>
+        <table>
+            <tr><th>检查项</th><th>点检次数</th><th>合格次数</th><th>合格率</th></tr>
+            <tr th:each="r : ${byItem}">
+                <td th:text="${r.itemName}"></td>
+                <td th:text="${r.total}"></td>
+                <td th:text="${r.okCount}"></td>
+                <td>
+                    <span th:text="${r.okRate} + '%'"
+                          th:style="${r.okRate < 80} ? 'color:#b3452f;font-weight:600' : ''"></span>
+                </td>
+            </tr>
+        </table>
+        <div class="empty" th:if="${#lists.isEmpty(byItem)}">暂无点检记录</div>
+    </div>
+
+    <div class="card">
+        <h2>点检结果汇总</h2>
+        <table style="max-width:420px">
+            <tr><th style="width:40%">结果</th><th>次数</th></tr>
+            <tr th:each="r : ${checkResult}">
+                <td>
+                    <span class="tag ok" th:if="${r.result == 'OK'}">合格</span>
+                    <span class="tag ng" th:if="${r.result == 'NG'}">不合格</span>
+                </td>
+                <td th:text="${r.cnt}"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+</body>
+</html>

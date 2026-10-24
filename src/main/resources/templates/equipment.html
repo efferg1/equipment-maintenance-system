@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('设备台账 - 设备点检与故障工单系统')}"></head>
+<body>
+<div th:replace="~{fragments :: nav}"></div>
+
+<div class="wrap">
+    <div class="card">
+        <h2>设备台账</h2>
+        <form method="get" th:action="@{/equipment}" class="row" style="margin-bottom:12px">
+            <select name="status">
+                <option value="">全部状态</option>
+                <option value="RUNNING" th:selected="${status == 'RUNNING'}">运行中</option>
+                <option value="REPAIRING" th:selected="${status == 'REPAIRING'}">维修中</option>
+                <option value="DOWN" th:selected="${status == 'DOWN'}">停机</option>
+                <option value="SCRAPPED" th:selected="${status == 'SCRAPPED'}">报废</option>
+            </select>
+            <input name="keyword" th:value="${keyword}" placeholder="编号 / 名称 / 位置">
+            <button class="btn">查询</button>
+            <a class="btn ghost" th:href="@{/equipment}">重置</a>
+        </form>
+
+        <div class="msg info" th:if="${msg}" th:text="${msg}"></div>
+
+        <table>
+            <tr>
+                <th>编号</th><th>设备名称</th><th>型号</th><th>位置</th>
+                <th>厂商</th><th>投运日期</th><th>状态</th><th>点检项</th><th>备注</th>
+            </tr>
+            <tr th:each="e : ${list}">
+                <td><b th:text="${e.eqCode}"></b></td>
+                <td th:text="${e.eqName}"></td>
+                <td th:text="${e.model}"></td>
+                <td th:text="${e.location}"></td>
+                <td th:text="${e.vendor}"></td>
+                <td th:text="${e.installDate}"></td>
+                <td>
+                    <span class="tag run" th:if="${e.status == 'RUNNING'}">运行中</span>
+                    <span class="tag rep" th:if="${e.status == 'REPAIRING'}">维修中</span>
+                    <span class="tag down" th:if="${e.status == 'DOWN'}">停机</span>
+                    <span class="tag scrap" th:if="${e.status == 'SCRAPPED'}">报废</span>
+                </td>
+                <td th:text="${e.planCount} + ' 项'"></td>
+                <td class="sub" style="margin:0" th:text="${e.remark}"></td>
+            </tr>
+        </table>
+        <div class="empty" th:if="${#lists.isEmpty(list)}">没有符合条件的设备</div>
+    </div>
+
+    <div class="card">
+        <h2>新增设备</h2>
+        <div class="sub">编号唯一，重复会被拒绝；投运日期格式 yyyy-MM-dd</div>
+        <form method="post" th:action="@{/equipment}" class="row">
+            <input name="eqCode" placeholder="设备编号" required style="width:110px">
+            <input name="eqName" placeholder="设备名称" required style="width:170px">
+            <input name="model" placeholder="型号" style="width:110px">
+            <input name="location" placeholder="安装位置" style="width:130px">
+            <input name="vendor" placeholder="制造厂商" style="width:120px">
+            <input name="installDate" placeholder="投运日期 2023-05-20" style="width:150px">
+            <select name="status" required>
+                <option value="RUNNING">运行中</option>
+                <option value="REPAIRING">维修中</option>
+                <option value="DOWN">停机</option>
+                <option value="SCRAPPED">报废</option>
+            </select>
+            <input name="remark" placeholder="备注" style="width:120px">
+            <button class="btn">保存</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

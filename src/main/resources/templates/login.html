@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('登录 - 设备点检与故障工单系统')}"></head>
+<body>
+<div class="wrap" style="max-width:400px;margin-top:80px">
+    <div class="card">
+        <h1>设备点检与故障工单系统</h1>
+        <div class="sub">设备台账 · PM 点检计划 · 故障工单闭环</div>
+
+        <div class="msg bad" th:if="${err}" th:text="${err}"></div>
+
+        <form method="post" th:action="@{/login}">
+            <div style="margin-bottom:11px">
+                <input name="username" th:value="${username}" placeholder="账号" style="width:100%">
+            </div>
+            <div style="margin-bottom:15px">
+                <input name="password" type="password" placeholder="密码" style="width:100%">
+            </div>
+            <button class="btn" style="width:100%">登 录</button>
+        </form>
+
+        <div class="sub" style="margin:15px 0 0;line-height:1.8">
+            演示账号（密码统一 123456）：<br>
+            设备管理员 admin　维修工 tech_zhou　操作工 op_li
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('点检计划 - 设备点检与故障工单系统')}"></head>
+<body>
+<div th:replace="~{fragments :: nav}"></div>
+
+<div class="wrap">
+    <div class="card">
+        <h2>点检计划（PM 预防性维护）</h2>
+        <div class="sub">
+            这是 TPM 里 PM 计划那一层：每个检查项有周期、判定标准、责任人、下次到期日。
+            点检完成后到期日自动顺延；填不合格会自动开一张故障工单，进维修闭环。
+        </div>
+        <div class="row" style="margin-bottom:12px">
+            <a class="btn" th:classappend="${filter == 'due'} ? '' : ' ghost'" th:href="@{/check(filter='due')}">今日待检 / 逾期</a>
+            <a class="btn" th:classappend="${filter == 'all'} ? '' : ' ghost'" th:href="@{/check(filter='all')}">全部启用</a>
+        </div>
+
+        <div class="msg info" th:if="${msg}" th:text="${msg}"></div>
+
+        <table>
+            <tr>
+                <th>设备</th><th>检查项</th><th>判定标准</th><th>周期</th>
+                <th>上次点检</th><th>下次到期</th><th>责任人</th><th>状态</th><th style="width:76px">操作</th>
+            </tr>
+            <tr th:each="p : ${list}">
+                <td>
+                    <b th:text="${p.eqCode}"></b><br>
+                    <span class="sub" style="margin:0" th:text="${p.eqName}"></span>
+                </td>
+                <td th:text="${p.itemName}"></td>
+                <td class="sub" style="margin:0" th:text="${p.standard}"></td>
+                <td th:text="${p.cycleDays} + ' 天'"></td>
+                <td th:text="${p.lastCheckDate}"></td>
+                <td th:text="${p.nextDueDate}"></td>
+                <td th:text="${p.owner}"></td>
+                <td>
+                    <span class="tag wait" th:if="${p.overdueDays == 0}">今日到期</span>
+                    <span class="tag down" th:if="${p.overdueDays > 0}"
+                          th:text="${'逾期 ' + p.overdueDays + ' 天'}"></span>
+                </td>
+                <td>
+                    <button type="button" class="btn sm"
+                            th:attr="data-id=${p.id},data-eq=${p.eqCode},data-item=${p.itemName},data-std=${p.standard}"
+                            onclick="openCheck(this)">点检</button>
+                </td>
+            </tr>
+        </table>
+        <div class="empty" th:if="${#lists.isEmpty(list)}">没有待点检的项目</div>
+    </div>
+
+    <div class="card">
+        <h2>最近点检记录</h2>
+        <table>
+            <tr><th>时间</th><th>设备</th><th>检查项</th><th>实测值</th><th>结果</th><th>点检人</th><th>备注</th></tr>
+            <tr th:each="r : ${recent}">
+                <td th:text="${#dates.format(r.checkTime, 'MM-dd HH:mm')}"></td>
+                <td th:text="${r.eqCode}"></td>
+                <td th:text="${r.itemName}"></td>
+                <td th:text="${r.measureValue}"></td>
+                <td>
+                    <span class="tag ok" th:if="${r.result == 'OK'}">合格</span>
+                    <span class="tag ng" th:if="${r.result == 'NG'}">不合格</span>
+                </td>
+                <td th:text="${r.checker}"></td>
+                <td class="sub" style="margin:0" th:text="${r.remark}"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<dialog id="ckDlg">
+    <form method="post" th:action="@{/check}" class="dlg">
+        <h3 id="ckTitle">点检</h3>
+        <div class="sub" id="ckStd" style="margin-bottom:6px"></div>
+
+        <input type="hidden" name="planId" id="ckPlanId">
+
+        <label>点检结果</label>
+        <select name="result" id="ckResult" required>
+            <option value="OK">合格</option>
+            <option value="NG">不合格（自动生成故障工单）</option>
+        </select>
+
+        <label>实测值</label>
+        <input name="measureValue" placeholder="例如 46℃ / 6.8mm / 正常">
+
+        <label>备注</label>
+        <input name="remark" placeholder="异常现象描述">
+
+        <div class="row" style="margin-top:14px;justify-content:flex-end">
+            <button type="button" class="btn ghost" onclick="document.getElementById('ckDlg').close()">取消</button>
+            <button class="btn">提交</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    function openCheck(btn) {
+        var d = btn.dataset;
+        document.getElementById('ckTitle').textContent = d.eq + '　' + d.item;
+        document.getElementById('ckStd').textContent = '判定标准：' + (d.std || '—');
+        document.getElementById('ckPlanId').value = d.id;
+        document.getElementById('ckDlg').showModal();
+    }
+</script>
+</body>
+</html>

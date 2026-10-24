@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('故障工单 - 设备点检与故障工单系统')}"></head>
+<body>
+<div th:replace="~{fragments :: nav}"></div>
+
+<div class="wrap">
+    <div class="card">
+        <h2>故障工单</h2>
+        <div class="sub">
+            报修 → 派单 → 维修（记录原因与处理措施）→ 验收关闭。每一步都留时间戳，
+            修复时长自动算出来，进统计页算 MTTR。
+        </div>
+        <div class="row" style="margin-bottom:12px">
+            <a class="btn" th:classappend="${status == null or status == ''} ? '' : ' ghost'" th:href="@{/fault}">全部</a>
+            <a class="btn" th:classappend="${status == 'WAITING'} ? '' : ' ghost'" th:href="@{/fault(status='WAITING')}">待派单</a>
+            <a class="btn" th:classappend="${status == 'REPAIRING'} ? '' : ' ghost'" th:href="@{/fault(status='REPAIRING')}">维修中</a>
+            <a class="btn" th:classappend="${status == 'VERIFYING'} ? '' : ' ghost'" th:href="@{/fault(status='VERIFYING')}">待验收</a>
+            <a class="btn" th:classappend="${status == 'CLOSED'} ? '' : ' ghost'" th:href="@{/fault(status='CLOSED')}">已关闭</a>
+        </div>
+
+        <div class="msg info" th:if="${msg}" th:text="${msg}"></div>
+
+        <table>
+            <tr>
+                <th>工单号</th><th>设备</th><th>故障现象</th><th>级别</th><th>状态</th>
+                <th>维修人</th><th>修复时长</th><th style="width:150px">操作</th>
+            </tr>
+            <tr th:each="f : ${list}">
+                <td>
+                    <b th:text="${f.orderNo}"></b><br>
+                    <span class="sub" style="margin:0" th:text="${#dates.format(f.reportTime, 'MM-dd HH:mm')} + ' 报修'"></span>
+                </td>
+                <td>
+                    <span th:text="${f.eqCode}"></span><br>
+                    <span class="sub" style="margin:0" th:text="${f.eqName}"></span>
+                </td>
+                <td>
+                    <span th:text="${f.symptom}"></span>
+                    <details th:if="${f.cause != null or f.actionTaken != null}" style="margin-top:4px">
+                        <summary class="sub" style="cursor:pointer;margin:0">原因与处理</summary>
+                        <div class="sub" style="margin:4px 0 0;line-height:1.6">
+                            <span th:if="${f.cause != null}">原因：<span th:text="${f.cause}"></span><br></span>
+                            <span th:if="${f.actionTaken != null}">措施：<span th:text="${f.actionTaken}"></span></span>
+                        </div>
+                    </details>
+                </td>
+                <td>
+                    <span class="tag down" th:if="${f.level == 'HIGH'}">高</span>
+                    <span class="tag wait" th:if="${f.level == 'MID'}">中</span>
+                    <span class="tag scrap" th:if="${f.level == 'LOW'}">低</span>
+                </td>
+                <td>
+                    <span class="tag wait" th:if="${f.status == 'WAITING'}">待派单</span>
+                    <span class="tag doing" th:if="${f.status == 'REPAIRING'}">维修中</span>
+                    <span class="tag rep" th:if="${f.status == 'VERIFYING'}">待验收</span>
+                    <span class="tag ok" th:if="${f.status == 'CLOSED'}">已关闭</span>
+                </td>
+                <td th:text="${f.technician}"></td>
+                <td>
+                    <span th:if="${f.repairMinutes != null}" th:text="${f.repairMinutes} + ' 分钟'"></span>
+                    <span th:if="${f.repairMinutes == null}" class="sub" style="margin:0">—</span>
+                </td>
+                <td>
+                    <button type="button" class="btn sm" th:if="${f.status == 'WAITING'}"
+                            th:attr="data-id=${f.id},data-no=${f.orderNo}" onclick="openAssign(this)">派单</button>
+                    <button type="button" class="btn sm ok" th:if="${f.status == 'REPAIRING'}"
+                            th:attr="data-id=${f.id},data-no=${f.orderNo}" onclick="openFinish(this)">维修完成</button>
+                    <form method="post" th:action="@{/fault/close}" style="display:inline"
+                          th:if="${f.status == 'VERIFYING'}">
+                        <input type="hidden" name="id" th:value="${f.id}">
+                        <button class="btn sm">验收关闭</button>
+                    </form>
+                </td>
+            </tr>
+        </table>
+        <div class="empty" th:if="${#lists.isEmpty(list)}">没有工单</div>
+    </div>
+
+    <div class="card">
+        <h2>报修</h2>
+        <form method="post" th:action="@{/fault/create}" class="row">
+            <select name="equipmentId" required>
+                <option value="">选择设备</option>
+                <option th:each="e : ${equipment}" th:value="${e.id}"
+                        th:text="${e.eqCode + ' ' + e.eqName}"></option>
+            </select>
+            <input name="symptom" placeholder="故障现象，越具体越好" required style="flex:1;min-width:280px">
+            <select name="level">
+                <option value="HIGH">高级（停线）</option>
+                <option value="MID" selected>中级（降效）</option>
+                <option value="LOW">低级（待办）</option>
+            </select>
+            <button class="btn">提交报修</button>
+        </form>
+    </div>
+</div>
+
+<dialog id="asDlg">
+    <form method="post" th:action="@{/fault/assign}" class="dlg">
+        <h3 id="asTitle">派单</h3>
+        <input type="hidden" name="id" id="asId">
+        <label>维修人</label>
+        <input name="technician" value="周师傅" required>
+        <div class="row" style="margin-top:14px;justify-content:flex-end">
+            <button type="button" class="btn ghost" onclick="document.getElementById('asDlg').close()">取消</button>
+            <button class="btn">确认派单</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="fnDlg">
+    <form method="post" th:action="@{/fault/finish}" class="dlg">
+        <h3 id="fnTitle">维修完成</h3>
+        <input type="hidden" name="id" id="fnId">
+        <label>故障原因</label>
+        <input name="cause" placeholder="例如 链条张紧度不足导致脱链" required>
+        <label>处理措施（含应急措施）</label>
+        <textarea name="actionTaken" rows="3" required
+                  placeholder="例如：切断电源挂牌上锁 → 手动盘车复位 → 调整张紧装置至 12mm → 空载试运行 30 分钟"></textarea>
+        <div class="row" style="margin-top:14px;justify-content:flex-end">
+            <button type="button" class="btn ghost" onclick="document.getElementById('fnDlg').close()">取消</button>
+            <button class="btn ok">提交</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    function openAssign(btn) {
+        document.getElementById('asTitle').textContent = '派单　' + btn.dataset.no;
+        document.getElementById('asId').value = btn.dataset.id;
+        document.getElementById('asDlg').showModal();
+    }
+    function openFinish(btn) {
+        document.getElementById('fnTitle').textContent = '维修完成　' + btn.dataset.no;
+        document.getElementById('fnId').value = btn.dataset.id;
+        document.getElementById('fnDlg').showModal();
+    }
+</script>
+</body>
+</html>

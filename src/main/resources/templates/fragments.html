@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">设备点检与故障工单管理系统</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0;
+            font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+            background: #f2f4f7; color: #222c38; font-size: 14px;
+        }
+        .nav {
+            background: #16324f; color: #fff; padding: 0 24px;
+            display: flex; align-items: center; gap: 20px; height: 52px;
+        }
+        .nav .brand { font-weight: 700; font-size: 15px; margin-right: 6px; letter-spacing: .3px }
+        .nav a { color: #b9cde3; text-decoration: none; font-size: 13.5px; }
+        .nav a:hover { color: #fff; }
+        .nav .right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+        .nav .who { font-size: 13px; color: #b9cde3; }
+        .wrap { max-width: 1180px; margin: 20px auto; padding: 0 18px; }
+        .card {
+            background: #fff; border: 1px solid #e3e8ef; border-radius: 10px;
+            padding: 16px 18px; margin-bottom: 16px;
+        }
+        h1 { font-size: 19px; margin: 0 0 4px; color: #16324f; }
+        h2 { font-size: 15px; margin: 0 0 12px; color: #16324f; }
+        .sub { color: #6c7885; font-size: 12.5px; margin-bottom: 14px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { border-bottom: 1px solid #eef1f5; padding: 9px 9px; text-align: left; vertical-align: top }
+        th { background: #f7f9fc; color: #42505f; font-weight: 600; }
+        tr:hover td { background: #fafcff; }
+        .btn {
+            display: inline-block; background: #16324f; color: #fff; border: none;
+            padding: 6px 13px; border-radius: 6px; font-size: 12.5px; cursor: pointer;
+            text-decoration: none; font-family: inherit;
+        }
+        .btn:hover { background: #22496f; }
+        .btn.ghost { background: #fff; color: #16324f; border: 1px solid #c9d6e5; }
+        .btn.sm { padding: 4px 10px; font-size: 12px; }
+        .btn.warn { background: #b3452f; }
+        .btn.ok { background: #16724d; }
+        input, select, textarea {
+            padding: 6px 9px; border: 1px solid #d4dce6; border-radius: 6px;
+            font-size: 13px; font-family: inherit; background: #fff;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #16324f; }
+        .row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+        .grid { display: flex; gap: 12px; flex-wrap: wrap; }
+        .box {
+            flex: 1; min-width: 130px; background: #f7f9fc; border-radius: 9px;
+            padding: 13px 15px; border-left: 3px solid #16324f;
+        }
+        .box .n { font-size: 23px; font-weight: 700; color: #16324f; line-height: 1.2 }
+        .box .l { font-size: 12.5px; color: #6c7885; margin-top: 2px }
+        .box.red { border-left-color: #b3452f } .box.red .n { color: #b3452f }
+        .box.orange { border-left-color: #b8720f } .box.orange .n { color: #b8720f }
+        .box.green { border-left-color: #16724d } .box.green .n { color: #16724d }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; }
+        .tag.run { background: #e7f6ee; color: #16724d }
+        .tag.down { background: #fdeceb; color: #b3452f }
+        .tag.rep { background: #fdf3e3; color: #b8720f }
+        .tag.scrap { background: #eef0f3; color: #6c7885 }
+        .tag.ok { background: #e7f6ee; color: #16724d }
+        .tag.ng { background: #fdeceb; color: #b3452f }
+        .tag.wait { background: #fdf3e3; color: #b8720f }
+        .tag.doing { background: #e9f1fb; color: #1f5b9e }
+        .empty { color: #8b95a1; padding: 16px 0; text-align: center; font-size: 13px }
+        .msg { padding: 9px 13px; border-radius: 7px; margin-bottom: 12px; font-size: 13px; }
+        .msg.info { background: #e9f1fb; color: #16324f }
+        .msg.bad { background: #fdeceb; color: #b3452f }
+        .overdue { color: #b3452f; font-weight: 600 }
+        dialog { border: none; border-radius: 10px; padding: 0; box-shadow: 0 8px 40px rgba(0,0,0,.18) }
+        dialog::backdrop { background: rgba(20,30,45,.42) }
+        .dlg { padding: 18px 20px; min-width: 420px }
+        .dlg h3 { margin: 0 0 12px; font-size: 15px; color: #16324f }
+        .dlg label { display: block; font-size: 12.5px; color: #4a5766; margin: 9px 0 4px }
+        .dlg input, .dlg select, .dlg textarea { width: 100% }
+    </style>
+</head>
+<body>
+
+<div th:fragment="nav" class="nav">
+    <span class="brand">设备点检与故障工单系统</span>
+    <a th:href="@{/}">看板</a>
+    <a th:href="@{/equipment}">设备台账</a>
+    <a th:href="@{/check}">点检计划</a>
+    <a th:href="@{/fault}">故障工单</a>
+    <a th:href="@{/stat}">统计分析</a>
+    <a th:href="@{/import}">台账导入</a>
+    <span class="right">
+        <span class="who" th:text="${session.loginUser != null ? session.loginUser.realName + '（' + session.loginUser.role + '）' : ''}"></span>
+        <a th:href="@{/logout}">退出</a>
+    </span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('台账导入 - 设备点检与故障工单系统')}"></head>
+<body>
+<div th:replace="~{fragments :: nav}"></div>
+
+<div class="wrap">
+    <div class="card">
+        <h2>设备台账批量导入</h2>
+        <div class="sub">
+            表头八列：设备编号 | 设备名称 | 型号 | 位置 | 厂商 | 投运日期 | 状态 | 备注。
+            逐行校验编号是否重复、日期格式、状态取值，<b>不合格的行不入库</b>，下面列出原因。
+        </div>
+
+        <form method="post" th:action="@{/import}" enctype="multipart/form-data" class="row">
+            <input type="file" name="file" accept=".xlsx,.xls" required>
+            <button class="btn">开始导入</button>
+            <a class="btn ghost" th:href="@{/import/template}">下载模板</a>
+        </form>
+
+        <div class="msg bad" th:if="${globalErr}" th:text="${globalErr}"></div>
+    </div>
+
+    <div class="card" th:if="${results != null and !#lists.isEmpty(results)}">
+        <h2>导入结果</h2>
+        <div class="row" style="margin-bottom:12px">
+            <span class="tag ok" th:text="${'成功 ' + success + ' 行'}"></span>
+            <span class="tag ng" th:text="${'失败 ' + failed + ' 行'}"></span>
+        </div>
+        <table>
+            <tr>
+                <th style="width:10%">行号</th><th>设备编号</th><th>设备名称</th>
+                <th style="width:12%">结果</th><th>原因</th>
+            </tr>
+            <tr th:each="r : ${results}">
+                <td th:text="${r.rowNo}"></td>
+                <td th:text="${r.eqCode}"></td>
+                <td th:text="${r.eqName}"></td>
+                <td>
+                    <span class="tag ok" th:if="${r.ok}">已入库</span>
+                    <span class="tag ng" th:unless="${r.ok}">未入库</span>
+                </td>
+                <td th:text="${r.reason}"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+</body>
+</html>
